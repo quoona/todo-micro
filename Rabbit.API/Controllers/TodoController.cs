@@ -9,9 +9,13 @@ namespace Rabbit.API.Controllers;
 public class TodoController(ITodoService todoService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Get() => Ok(await todoService.GetAllAsync());
+    public async Task<IActionResult> Get()
+    {
+        var result = await todoService.GetAllAsync();
+        return Ok(result);
+    }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var result = await todoService.GetByIdAsync(id);
@@ -25,7 +29,7 @@ public class TodoController(ITodoService todoService) : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Put(int id, [FromBody] TodoDto dto)
     {
         var result = await todoService.UpdateAsync(id, dto);
@@ -33,7 +37,10 @@ public class TodoController(ITodoService todoService) : ControllerBase
     }
 
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
-        => Ok(await todoService.DeleteAsync(id));
+    {
+        var result = await todoService.DeleteAsync(id);
+        return Ok(result);
+    }
 }

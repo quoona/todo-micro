@@ -1,5 +1,9 @@
+using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Rabbit.Application.Interfaces;
+using Rabbit.Application.Validators;
 using Rabbit.Infrastructure.Data;
 using Rabbit.Infrastructure.Services;
 
@@ -18,11 +22,16 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        //Add controller
+        //Add Controllers
         builder.Services.AddControllers();
+
+        //Add Validators
+        builder.Services.AddFluentValidationAutoValidation();
+        builder.Services.AddValidatorsFromAssemblyContaining<TodoDtoValidator>();
 
         //Services
         builder.Services.AddScoped<ITodoService, TodoService>();
+        builder.Services.AddAutoMapper(cfg => { cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()); });
 
         //DB Context
         var connectionString = builder.Configuration.GetConnectionString("Default");

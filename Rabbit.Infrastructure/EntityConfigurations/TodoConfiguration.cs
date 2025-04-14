@@ -11,6 +11,7 @@ public class TodoConfiguration : IEntityTypeConfiguration<Todo>
         builder.HasKey(x => x.TodoId);
         builder.Property(x => x.Title).IsRequired().HasMaxLength(255);
         builder.Property(x => x.CreatedAt).HasDefaultValue(DateTime.Now);
-        builder.Property(x => x.GuildId).HasDefaultValue(Guid.NewGuid());
+        builder.Property(x => x.IsCompleted).HasDefaultValue(false);
+        builder.Property(x => x.GuidId).HasDefaultValue(Guid.NewGuid());
     }
 }
