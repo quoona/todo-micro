@@ -1,13 +1,16 @@
 ﻿using AutoMapper;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
+using Rabbit.Application.Messages;
 using Rabbit.Domain.Entities;
 using Rabbit.Infrastructure.Data;
+using System.Text.Json;
 
 namespace Rabbit.Infrastructure.Services;
 
-public class TodoService(AppDbContext context, IMapper mapper) : ITodoService
+public class TodoService(AppDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync()
     {
@@ -26,6 +29,14 @@ public class TodoService(AppDbContext context, IMapper mapper) : ITodoService
         var todo = mapper.Map<Todo>(todoDto);
         await context.Todos.AddAsync(todo);
         await context.SaveChangesAsync();
+
+        await publishEndpoint.Publish(new AuditLogMessage
+        {
+            Action = "CreateAsync",
+            UserId = todoDto.GuidId.ToString(),
+            Data = JsonSerializer.Serialize(todoDto),
+            Timestamp = DateTime.Now
+        });
 
         return mapper.Map<TodoDto>(todo);
     }
