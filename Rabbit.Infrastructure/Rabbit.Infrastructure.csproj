@@ -24,6 +24,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Rabbit.Application\Rabbit.Application.csproj" />
+      <ProjectReference Include="..\Rabbit.Contracts\Rabbit.Contracts.csproj" />
       <ProjectReference Include="..\Rabbit.Domain\Rabbit.Domain.csproj" />
     </ItemGroup>
 

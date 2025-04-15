@@ -1,14 +1,9 @@
-using AutoMapper;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using Rabbit.Application.Interfaces;
-using Rabbit.Application.Validators;
-using Rabbit.Infrastructure.Data;
-using Rabbit.Infrastructure.Services;
+using Rabbit.Audit.Application.Interfaces;
+using Rabbit.Audit.Consumers;
+using Rabbit.Audit.Infrastructure.Services;
 
-namespace Rabbit.API;
+namespace Rabbit.Audit;
 
 public class Program
 {
@@ -23,39 +18,39 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        //Add Controllers
-        builder.Services.AddControllers();
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-        //Add Validators
-        builder.Services.AddFluentValidationAutoValidation();
-        builder.Services.AddValidatorsFromAssemblyContaining<TodoDtoValidator>();
+        builder.Services.AddScoped<AuditLogConsumer>();
+        
+        builder.Services.AddScoped<ITelegramMessageService, TelegramMessageService>();
 
-        //Services
-        builder.Services.AddScoped<ITodoService, TodoService>();
-        builder.Services.AddAutoMapper(cfg => { cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()); });
-
-        //Logging
+        // Logging
         builder.Services.AddSingleton<ILoggingService, LoggingService>();
 
         //MassTransit + RabbitMQ
         builder.Services.AddMassTransit(x =>
         {
+            x.AddConsumer<AuditLogConsumer>();
             x.UsingRabbitMq((context, configurator) =>
             {
                 configurator.Host("rabbitmq", "/", h =>
                 {
                     h.Username("rabbitadmin");
                     h.Password("123456");
+                    h.Heartbeat(TimeSpan.FromSeconds(10));
                 });
+
+                configurator.ReceiveEndpoint("audit-log-queue",
+                    e => { e.ConfigureConsumer<AuditLogConsumer>(context); });
+                
+                configurator.ConfigureEndpoints(context);
+                
+                configurator.UseDelayedRedelivery(r => r.Interval(3, TimeSpan.FromSeconds(5)));
             });
         });
 
-        //DB Context
-        var connectionString = builder.Configuration.GetConnectionString("Default");
-        builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString,
-                new MySqlServerVersion(ServerVersion.AutoDetect(connectionString))
-            )
-        );
 
         var app = builder.Build();
 
@@ -67,9 +62,8 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
         app.UseAuthorization();
-        //Map controller
-        app.MapControllers();
 
         app.Run();
     }

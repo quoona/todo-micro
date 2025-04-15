@@ -3,10 +3,10 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
-using Rabbit.Application.Messages;
 using Rabbit.Domain.Entities;
 using Rabbit.Infrastructure.Data;
 using System.Text.Json;
+using Rabbit.Contracts.Contracts;
 
 namespace Rabbit.Infrastructure.Services;
 
