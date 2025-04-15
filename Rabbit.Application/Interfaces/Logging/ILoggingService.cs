@@ -1,4 +1,4 @@
-﻿namespace Rabbit.Application.Interfaces;
+﻿namespace Rabbit.Application.Interfaces.Logging;
 
 public interface ILoggingService
 {

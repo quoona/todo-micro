@@ -4,8 +4,14 @@ using FluentValidation.AspNetCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Rabbit.Application.Interfaces;
+using Rabbit.Application.Interfaces.Generic;
+using Rabbit.Application.Interfaces.Logging;
+using Rabbit.Application.Interfaces.Todos;
+using Rabbit.Application.UseCases;
 using Rabbit.Application.Validators;
 using Rabbit.Infrastructure.Data;
+using Rabbit.Infrastructure.Repositories;
+using Rabbit.Infrastructure.Repositories.Generic;
 using Rabbit.Infrastructure.Services;
 
 namespace Rabbit.API;
@@ -30,9 +36,19 @@ public class Program
         builder.Services.AddFluentValidationAutoValidation();
         builder.Services.AddValidatorsFromAssemblyContaining<TodoDtoValidator>();
 
+        //Repositories
+        builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+
         //Services
         builder.Services.AddScoped<ITodoService, TodoService>();
+        builder.Services.AddScoped<ITodoService, TodoService>();
+
+        //Mapper
         builder.Services.AddAutoMapper(cfg => { cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()); });
+
+        //UseCases
+        builder.Services.AddScoped<ICreateTodoUseCase, CreateTodoUseCase>();
 
         //Logging
         builder.Services.AddSingleton<ILoggingService, LoggingService>();

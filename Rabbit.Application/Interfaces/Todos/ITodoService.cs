@@ -1,6 +1,6 @@
 ﻿using Rabbit.Application.DTOs;
 
-namespace Rabbit.Application.Interfaces;
+namespace Rabbit.Application.Interfaces.Todos;
 
 public interface ITodoService
 {

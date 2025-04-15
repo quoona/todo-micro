@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
+using Rabbit.Application.Interfaces.Todos;
+using Rabbit.Application.UseCases;
 
 namespace Rabbit.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TodoController(ITodoService todoService) : ControllerBase
+public class TodoController(ITodoService todoService, ICreateTodoUseCase createTodoUseCase) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -25,7 +27,8 @@ public class TodoController(ITodoService todoService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] TodoDto dto)
     {
-        var result = await todoService.CreateAsync(dto);
+        //NOTE: Execute UseCase instead of call direct from service
+        var result = await createTodoUseCase.ExecuteAsync(dto);
         return Ok(result);
     }
 

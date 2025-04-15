@@ -1,4 +1,5 @@
 ﻿using Rabbit.Application.Interfaces;
+using Rabbit.Application.Interfaces.Logging;
 using Serilog;
 
 namespace Rabbit.Infrastructure.Services;

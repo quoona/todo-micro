@@ -1,34 +1,35 @@
 ﻿using AutoMapper;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
-using Rabbit.Domain.Entities;
-using Rabbit.Infrastructure.Data;
-using System.Text.Json;
 using Rabbit.Contracts.Contracts;
+using Rabbit.Domain.Entities;
+using System.Text.Json;
+using Rabbit.Application.Interfaces.Todos;
 
 namespace Rabbit.Infrastructure.Services;
 
-public class TodoService(AppDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint) : ITodoService
+public class TodoService(
+    ITodoRepository todoRepository,
+    IMapper mapper,
+    IPublishEndpoint publishEndpoint) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync()
     {
-        var todos = await context.Todos.ToListAsync();
+        var todos = await todoRepository.GetAllAsync();
         return mapper.Map<List<TodoDto>>(todos);
     }
 
     public async Task<TodoDto> GetByIdAsync(int todoId)
     {
-        var todo = await context.Todos.FindAsync(todoId);
+        var todo = await todoRepository.GetByIdAsync(todoId);
         return mapper.Map<TodoDto>(todo);
     }
 
     public async Task<TodoDto> CreateAsync(TodoDto todoDto)
     {
         var todo = mapper.Map<Todo>(todoDto);
-        await context.Todos.AddAsync(todo);
-        await context.SaveChangesAsync();
+        await todoRepository.AddAsync(todo);
 
         await publishEndpoint.Publish(new AuditLogMessage
         {
@@ -43,24 +44,22 @@ public class TodoService(AppDbContext context, IMapper mapper, IPublishEndpoint 
 
     public async Task<bool> UpdateAsync(int todoId, TodoDto todoDto)
     {
-        var todo = await context.Todos.FindAsync(todoId);
+        var todo = await todoRepository.GetByIdAsync(todoId);
         if (todo == null) return false;
 
         todo.Title = todoDto.Title;
         todo.IsCompleted = todoDto.IsComplete;
 
-        context.Todos.Update(todo);
-        await context.SaveChangesAsync();
+        await todoRepository.UpdateAsync(todo);
         return true;
     }
 
     public async Task<bool> DeleteAsync(int todoId)
     {
-        var todo = await context.Todos.FindAsync(todoId);
+        var todo = await todoRepository.GetByIdAsync(todoId);
         if (todo == null) return false;
 
-        context.Todos.Remove(todo);
-        await context.SaveChangesAsync();
+        await todoRepository.DeleteAsync(todo);
         return true;
     }
 }
