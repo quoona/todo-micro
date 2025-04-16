@@ -3,6 +3,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Rabbit.Application.Events.TodoEvents;
 using Rabbit.Application.Interfaces;
 using Rabbit.Application.Interfaces.Generic;
 using Rabbit.Application.Interfaces.Logging;
@@ -10,6 +11,7 @@ using Rabbit.Application.Interfaces.Todos;
 using Rabbit.Application.UseCases;
 using Rabbit.Application.Validators;
 using Rabbit.Infrastructure.Data;
+using Rabbit.Infrastructure.Events.TodoEvents;
 using Rabbit.Infrastructure.Repositories;
 using Rabbit.Infrastructure.Repositories.Generic;
 using Rabbit.Infrastructure.Services;
@@ -52,6 +54,9 @@ public class Program
 
         //Logging
         builder.Services.AddSingleton<ILoggingService, LoggingService>();
+
+        //Mediator
+        builder.Services.AddMediatR(cfg => { cfg.RegisterServicesFromAssembly(typeof(TodoCreatedEventHandler).Assembly); });
 
         //MassTransit + RabbitMQ
         builder.Services.AddMassTransit(x =>

@@ -18,12 +18,11 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
         builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
         builder.Services.AddScoped<AuditLogConsumer>();
-        
+
         builder.Services.AddScoped<ITelegramMessageService, TelegramMessageService>();
 
         // Logging
@@ -44,9 +43,9 @@ public class Program
 
                 configurator.ReceiveEndpoint("audit-log-queue",
                     e => { e.ConfigureConsumer<AuditLogConsumer>(context); });
-                
+
                 configurator.ConfigureEndpoints(context);
-                
+
                 configurator.UseDelayedRedelivery(r => r.Interval(3, TimeSpan.FromSeconds(5)));
             });
         });

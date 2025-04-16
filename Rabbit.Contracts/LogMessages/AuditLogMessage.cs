@@ -1,4 +1,4 @@
-﻿namespace Rabbit.Contracts.Contracts;
+﻿namespace Rabbit.Contracts.LogMessages;
 
 public class AuditLogMessage
 {

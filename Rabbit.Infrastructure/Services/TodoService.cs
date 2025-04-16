@@ -2,17 +2,20 @@
 using MassTransit;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
-using Rabbit.Contracts.Contracts;
 using Rabbit.Domain.Entities;
 using System.Text.Json;
+using MediatR;
+using Rabbit.Application.Events.TodoEvents;
 using Rabbit.Application.Interfaces.Todos;
+using Rabbit.Contracts.LogMessages;
 
 namespace Rabbit.Infrastructure.Services;
 
 public class TodoService(
     ITodoRepository todoRepository,
     IMapper mapper,
-    IPublishEndpoint publishEndpoint) : ITodoService
+    IMediator mediator
+) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync()
     {
@@ -30,16 +33,11 @@ public class TodoService(
     {
         var todo = mapper.Map<Todo>(todoDto);
         await todoRepository.AddAsync(todo);
-
-        await publishEndpoint.Publish(new AuditLogMessage
-        {
-            Action = "CreateAsync",
-            UserId = todoDto.GuidId.ToString(),
-            Data = JsonSerializer.Serialize(todoDto),
-            Timestamp = DateTime.Now
-        });
-
-        return mapper.Map<TodoDto>(todo);
+        var result = mapper.Map<TodoDto>(todo);
+        
+        //publish message
+        await mediator.Publish(new TodoCreatedEvent(result));
+        return result;
     }
 
     public async Task<bool> UpdateAsync(int todoId, TodoDto todoDto)
