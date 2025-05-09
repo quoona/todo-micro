@@ -1,14 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 using Rabbit.Application.DTOs;
 using Rabbit.Application.Interfaces;
 using Rabbit.Application.Interfaces.Todos;
 using Rabbit.Application.UseCases;
+using Rabbit.Contracts.LogMessages;
 
 namespace Rabbit.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TodoController(ITodoService todoService, ICreateTodoUseCase createTodoUseCase) : ControllerBase
+public class TodoController(
+    ITodoService todoService,
+    ICreateTodoUseCase createTodoUseCase,
+    IPublishEndpoint publishEndpoint
+) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -45,5 +51,12 @@ public class TodoController(ITodoService todoService, ICreateTodoUseCase createT
     {
         var result = await todoService.DeleteAsync(id);
         return Ok(result);
+    }
+
+    [HttpPost("create-via-mq")]
+    public async Task<IActionResult> CreateViaMq([FromBody] CreateTodoMessage message)
+    {
+        await publishEndpoint.Publish(message);
+        return Ok("Created successfully!");
     }
 }

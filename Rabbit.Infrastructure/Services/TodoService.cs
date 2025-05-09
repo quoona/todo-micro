@@ -34,9 +34,7 @@ public class TodoService(
         var todo = mapper.Map<Todo>(todoDto);
         await todoRepository.AddAsync(todo);
         var result = mapper.Map<TodoDto>(todo);
-        
-        //publish message
-        await mediator.Publish(new TodoCreatedEvent(result));
+
         return result;
     }
 

@@ -4,7 +4,10 @@ using Rabbit.Contracts.LogMessages;
 
 namespace Rabbit.Audit.Consumers;
 
-public class AuditLogConsumer(ILoggingService loggingService, ITelegramMessageService messageService)
+public class AuditLogConsumer(
+    ILoggingService loggingService,
+    ITelegramMessageService messageService,
+    ILogger<AuditLogConsumer> logger)
     : IConsumer<AuditLogMessage>
 {
     public async Task Consume(ConsumeContext<AuditLogMessage> context)
@@ -13,8 +16,10 @@ public class AuditLogConsumer(ILoggingService loggingService, ITelegramMessageSe
         loggingService.LogInformation(
             $"[AUDIT] Action: {message.Action}, User: {message.UserId}, Time: {message.Timestamp}, Data: {message.Data}");
 
-        await messageService.SendMessage(
-            $"[0_AUDIT] Action: {message.Action}, User: {message.UserId}, Time: {message.Timestamp}, Data: {message.Data}");
+        logger.LogDebug(
+            $"[AUDIT] Action: {message.Action}, User: {message.UserId}, Time: {message.Timestamp}, Data: {message.Data}");
+        // await messageService.SendMessage(
+        //     $"[0_AUDIT] Action: {message.Action}, User: {message.UserId}, Time: {message.Timestamp}, Data: {message.Data}");
 
         await Task.CompletedTask;
     }

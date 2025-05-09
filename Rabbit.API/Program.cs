@@ -10,6 +10,7 @@ using Rabbit.Application.Interfaces.Logging;
 using Rabbit.Application.Interfaces.Todos;
 using Rabbit.Application.UseCases;
 using Rabbit.Application.Validators;
+using Rabbit.Infrastructure.Consumers;
 using Rabbit.Infrastructure.Data;
 using Rabbit.Infrastructure.Events.TodoEvents;
 using Rabbit.Infrastructure.Repositories;
@@ -56,11 +57,15 @@ public class Program
         builder.Services.AddSingleton<ILoggingService, LoggingService>();
 
         //Mediator
-        builder.Services.AddMediatR(cfg => { cfg.RegisterServicesFromAssembly(typeof(TodoCreatedEventHandler).Assembly); });
+        builder.Services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(TodoCreatedEventHandler).Assembly);
+        });
 
         //MassTransit + RabbitMQ
         builder.Services.AddMassTransit(x =>
         {
+            x.AddConsumer<CreateTodoConsumer>();
             x.UsingRabbitMq((context, configurator) =>
             {
                 configurator.Host("rabbitmq", "/", h =>
@@ -68,6 +73,13 @@ public class Program
                     h.Username("rabbitadmin");
                     h.Password("123456");
                 });
+
+                configurator.ReceiveEndpoint("create-todo-queue",
+                    e => { e.ConfigureConsumer<CreateTodoConsumer>(context); });
+
+                configurator.ConfigureEndpoints(context);
+
+                configurator.UseDelayedRedelivery(r => r.Interval(3, TimeSpan.FromSeconds(5)));
             });
         });
 
